@@ -21,6 +21,7 @@ class User(models.Model):
     L = {
         'username': 32,
         'password': 32,
+        'ss_pwd': 32,
     }
     username = models.CharField(
         max_length=L['username'],
@@ -44,13 +45,15 @@ class User(models.Model):
         verbose_name='是否有权限新增用户',
         default=False,
     )
-    port = models.IntegerField(
+    port = models.SmallIntegerField(
         verbose_name='SS端口',
         default=0,
+        unique=True,
     )
     ss_pwd = models.CharField(
         verbose_name='SS密码',
         default=None,
+        max_length=L['ss_pwd'],
     )
     FIELD_LIST = ['username', 'password', 'parent', 'grant', 'port', 'ss_pwd']
 
@@ -115,7 +118,7 @@ class User(models.Model):
         except ValueError as err:
             deprint(str(err))
             return Ret(Error.ERROR_CREATE_USER)
-        return Ret(Error.OK, o_user)
+        return Ret(o_user)
 
     def change_password(self, password, old_password):
         """修改密码"""
@@ -144,7 +147,7 @@ class User(models.Model):
         except User.DoesNotExist as err:
             deprint(str(err))
             return Ret(Error.NOT_FOUND_USER)
-        return Ret(Error.OK, o_user)
+        return Ret(o_user)
 
     @staticmethod
     def get_user_by_id(user_id):
@@ -154,7 +157,7 @@ class User(models.Model):
         except User.DoesNotExist as err:
             deprint(str(err))
             return Ret(Error.NOT_FOUND_USER)
-        return Ret(Error.OK, o_user)
+        return Ret(o_user)
 
     def to_dict(self):
         """把用户对象转换为字典"""
@@ -174,5 +177,5 @@ class User(models.Model):
             deprint(str(err))
             return Ret(Error.NOT_FOUND_USER)
         if User._hash(password) == o_user.password:
-            return Ret(Error.OK, o_user)
+            return Ret(o_user)
         return Ret(Error.ERROR_PASSWORD)
