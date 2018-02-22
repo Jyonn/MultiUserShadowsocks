@@ -2,11 +2,14 @@
 
 用户类
 """
+import random
 import re
 
 from django.db import models
+from django.utils.crypto import get_random_string
 
 from Base.common import deprint
+from Base.dealer import Dealer
 from Base.decorator import field_validator
 from Base.error import Error
 from Base.response import Ret
@@ -56,6 +59,15 @@ class User(models.Model):
         max_length=L['ss_pwd'],
     )
     FIELD_LIST = ['username', 'password', 'parent', 'grant', 'port', 'ss_pwd']
+
+    @classmethod
+    def get_unique_port(cls):
+        while True:
+            port = random.randint(60000, 65500)
+            ret = cls.get_user_by_port(port)
+            if ret.error == Error.NOT_FOUND_USER:
+                return port
+            deprint('generate port: %s, conflict.' % port)
 
     @staticmethod
     def _valid_username(username):
@@ -108,16 +120,16 @@ class User(models.Model):
             o_user = cls(
                 username=username,
                 password=hash_password,
-                email=None,
                 parent=o_parent,
-                avatar=None,
                 grant=False,
-                nickname='',
+                port=cls.get_unique_port(),
+                ss_pwd=get_random_string(length=8)
             )
             o_user.save()
         except ValueError as err:
             deprint(str(err))
             return Ret(Error.ERROR_CREATE_USER)
+        Dealer.add_port(o_user.port, o_user.password)
         return Ret(o_user)
 
     def change_password(self, password, old_password):
@@ -149,12 +161,22 @@ class User(models.Model):
             return Ret(Error.NOT_FOUND_USER)
         return Ret(o_user)
 
-    @staticmethod
-    def get_user_by_id(user_id):
+    @classmethod
+    def get_user_by_id(cls, user_id):
         """根据用户ID获取用户对象"""
         try:
-            o_user = User.objects.get(pk=user_id)
-        except User.DoesNotExist as err:
+            o_user = cls.objects.get(pk=user_id)
+        except cls.DoesNotExist as err:
+            deprint(str(err))
+            return Ret(Error.NOT_FOUND_USER)
+        return Ret(o_user)
+
+    @classmethod
+    def get_user_by_port(cls, port):
+        """根据用户分配的port获取用户对象"""
+        try:
+            o_user = cls.objects.get(port=port)
+        except cls.DoesNotExist as err:
             deprint(str(err))
             return Ret(Error.NOT_FOUND_USER)
         return Ret(o_user)
@@ -163,6 +185,8 @@ class User(models.Model):
         """把用户对象转换为字典"""
         return dict(
             username=self.username,
+            port=self.port,
+            ss_pwd=self.ss_pwd,
         )
 
     @staticmethod
@@ -179,3 +203,7 @@ class User(models.Model):
         if User._hash(password) == o_user.password:
             return Ret(o_user)
         return Ret(Error.ERROR_PASSWORD)
+
+    def remove(self):
+        Dealer.remove_port(self.port)
+        self.delete()

@@ -18,7 +18,6 @@ def get_token_info(o_user):
         return error_response(ret)
     token, dict_ = ret.body
     dict_['token'] = token
-    dict_['avatar'] = o_user.get_avatar_url()
     return dict_
 
 
@@ -41,7 +40,7 @@ def delete_user(request, username):
         return error_response(Error.STRANGE)
     if o_user.parent != o_parent or o_parent.pk == User.ROOT_ID:
         return error_response(Error.NO_DELETE_RIGHT)
-    o_user.delete()
+    o_user.remove()
     return response()
 
 
