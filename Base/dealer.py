@@ -22,27 +22,25 @@ class Dealer:
 
     @classmethod
     def _send(cls, data):
-        data_str = json.dumps(data)
-        deprint(data_str)
-        cls._client.send(data_str.encode())
+        cls._client.send(data)
         deprint('end send')
         # deprint(cls._client.recv(1506))
 
     @classmethod
     def add_port(cls, port, password):
         data = {
-            'add': {
-                'server_port': port,
-                'password': password,
-            },
+            'server_port': port,
+            'password': password,
         }
-        cls._send(data)
+        data_str = json.dumps(data)
+        deprint(data_str)
+        cls._send('add: %s' % data_str)
 
     @classmethod
     def remove_port(cls, port):
         data = {
-            'remove': {
-                'server_port': port,
-            },
+            'server_port': port,
         }
-        cls._send(data)
+        data_str = json.dumps(data)
+        deprint(data_str)
+        cls._send('remove: %s' % data_str)
