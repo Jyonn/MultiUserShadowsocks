@@ -48,7 +48,7 @@ class User(models.Model):
         verbose_name='是否有权限新增用户',
         default=False,
     )
-    port = models.SmallIntegerField(
+    port = models.PositiveSmallIntegerField(
         verbose_name='SS端口',
         default=0,
         unique=True,
