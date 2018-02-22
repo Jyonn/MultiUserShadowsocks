@@ -20,6 +20,9 @@ class Error:
     INVALID_PASSWORD = E(2001)
     INVALID_USERNAME = E(2000)
 
+    JWT_EXPIRED = E(1016)
+    ERROR_JWT_FORMAT = E(1015)
+    JWT_PARAM_INCOMPLETE = E(1014)
     PASSWORD_CHANGED = E(1013)
     BETA_CODE_ERROR = E(1012)
     ERROR_PROCESS_FUNC = E(1011)
@@ -47,6 +50,9 @@ class Error:
         (INVALID_PASSWORD, "密码长度应在6-16个字符之内且无非法字符"),
         (INVALID_USERNAME, "用户名只能是包含字母数字和下划线的3-32位字符串"),
 
+        (JWT_EXPIRED, "身份认证过期"),
+        (ERROR_JWT_FORMAT, "身份认证token错误"),
+        (JWT_PARAM_INCOMPLETE, "身份认证token缺少参数"),
         (PASSWORD_CHANGED, "密码已改变，需要重新获取token"),
         (BETA_CODE_ERROR, "内测码错误"),
         (ERROR_PROCESS_FUNC, "参数预处理函数错误"),
