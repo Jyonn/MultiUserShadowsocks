@@ -1,19 +1,14 @@
 import json
 import socket
 
-import os
-
 from Base.common import deprint
-from MultiUserShadowsocks.settings import BASE_DIR
 
 
 class Dealer:
-    _conf_path = os.path.join(BASE_DIR, 'conf')
-
     _client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     _client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    _client.bind(os.path.join(_conf_path, 'shadowsocks-client.sock'))
-    _client.connect(os.path.join(_conf_path, 'shadowsocks-manager.sock'))
+    _client.bind('/tmp/shadowsocks-client.sock')
+    _client.connect('/var/run/shadowsocks-manager.sock')
 
     @classmethod
     def _send(cls, data):
