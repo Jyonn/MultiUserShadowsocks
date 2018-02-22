@@ -229,3 +229,63 @@ def decorator_generator(verify_func):
             return func(request, *args, **kwargs)
         return wrapper
     return decorator
+
+
+def require_login_func(request):
+    """需要登录
+
+    并根据传入的token获取user
+    """
+    jwt_str = request.META.get('HTTP_TOKEN')
+    if jwt_str is None:
+        return Ret(Error.REQUIRE_LOGIN)
+    from Base.jtoken import jwt_d
+
+    ret = jwt_d(jwt_str)
+    if ret.error is not Error.OK:
+        return ret
+    dict_ = ret.body
+
+    try:
+        user_id = dict_["user_id"]
+    except KeyError as err:
+        deprint(str(err))
+        return Ret(Error.STRANGE)
+
+    from User.models import User
+    ret = User.get_user_by_id(user_id)
+    if ret.error is not Error.OK:
+        return ret
+    o_user = ret.body
+    if not isinstance(o_user, User):
+        return Ret(Error.STRANGE)
+
+    if float(dict_['ctime']) < float(o_user.pwd_change_time):
+        return Ret(Error.PASSWORD_CHANGED)
+    request.user = o_user
+    return Ret()
+
+
+def maybe_login_func(request):
+    """decorator, maybe require login"""
+    require_login_func(request)
+    return Ret()
+
+
+def require_root_func(request):
+    """decorator, require root login"""
+    ret = require_login_func(request)
+    if ret.error is not Error.OK:
+        return ret
+    o_user = request.user
+    from User.models import User
+    if not isinstance(o_user, User):
+        return Ret(Error.STRANGE)
+    if o_user.pk != User.ROOT_ID:
+        return Ret(Error.REQUIRE_ROOT)
+    return Ret()
+
+
+require_login = decorator_generator(require_login_func)
+maybe_login = decorator_generator(maybe_login_func)
+require_root = decorator_generator(require_root_func)

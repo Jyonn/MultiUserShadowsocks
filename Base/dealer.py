@@ -4,8 +4,8 @@ import socket
 from Base.common import deprint
 
 client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-client.bind('../Config/shadowsocks-client.sock')
-client.connect('../Config/shadowsocks-manager.sock')
+client.bind('../conf/shadowsocks-client.sock')
+client.connect('../conf/shadowsocks-manager.sock')
 
 
 def add_port(port, password):

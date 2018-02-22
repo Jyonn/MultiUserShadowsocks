@@ -10,6 +10,8 @@ class E:
 
 
 class Error:
+    NO_DELETE_RIGHT = E(2008)
+    NOT_FOUND_CONFIG = E(2007)
     NOT_FOUND_USER = E(2006)
     ERROR_PASSWORD = E(2005)
     ERROR_CREATE_USER = E(2004)
@@ -18,6 +20,7 @@ class Error:
     INVALID_PASSWORD = E(2001)
     INVALID_USERNAME = E(2000)
 
+    PASSWORD_CHANGED = E(1013)
     BETA_CODE_ERROR = E(1012)
     ERROR_PROCESS_FUNC = E(1011)
     ERROR_TUPLE_FORMAT = E(1010)
@@ -34,6 +37,8 @@ class Error:
     OK = E(0)
 
     ERROR_DICT = [
+        (NO_DELETE_RIGHT, "没有删除权限"),
+        (NOT_FOUND_CONFIG, "不存在的配置"),
         (NOT_FOUND_USER, "不存在的用户"),
         (ERROR_PASSWORD, "错误的用户名或密码"),
         (ERROR_CREATE_USER, "创建用户失败"),
@@ -42,6 +47,7 @@ class Error:
         (INVALID_PASSWORD, "密码长度应在6-16个字符之内且无非法字符"),
         (INVALID_USERNAME, "用户名只能是包含字母数字和下划线的3-32位字符串"),
 
+        (PASSWORD_CHANGED, "密码已改变，需要重新获取token"),
         (BETA_CODE_ERROR, "内测码错误"),
         (ERROR_PROCESS_FUNC, "参数预处理函数错误"),
         (ERROR_TUPLE_FORMAT, "属性元组格式错误"),
