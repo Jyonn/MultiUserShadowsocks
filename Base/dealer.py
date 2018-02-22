@@ -10,9 +10,15 @@ class Dealer:
     _client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     _client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     client_sock_path = '/tmp/shadowsocks-client.sock'
-    os.remove(client_sock_path)
+    try:
+        os.remove(client_sock_path)
+    except FileNotFoundError as err:
+        pass
     _client.bind(client_sock_path)
-    _client.connect('/var/run/shadowsocks-manager.sock')
+    try:
+        _client.connect('/var/run/shadowsocks-manager.sock')
+    except FileNotFoundError as err:
+        pass
 
     @classmethod
     def _send(cls, data):
