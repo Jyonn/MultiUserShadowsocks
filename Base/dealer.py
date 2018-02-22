@@ -22,7 +22,7 @@ class Dealer:
 
     @classmethod
     def _send(cls, data):
-        cls._client.send(data)
+        cls._client.send(data.encode())
         deprint('end send')
         # deprint(cls._client.recv(1506))
 
