@@ -12,7 +12,7 @@ class Dealer:
 
     _client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     _client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    _client.bind(os.path.join(_conf_path, 'shadowsocks-client.sock'))
+    _client.bind(os.path.join(_conf_path, 'tmp.sock'))
     _client.connect(os.path.join(_conf_path, 'shadowsocks-manager.sock'))
 
     @classmethod
