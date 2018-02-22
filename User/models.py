@@ -129,7 +129,7 @@ class User(models.Model):
         except ValueError as err:
             deprint(str(err))
             return Ret(Error.ERROR_CREATE_USER)
-        Dealer.add_port(o_user.port, o_user.password)
+        Dealer.add_port(o_user.port, o_user.ss_pwd)
         return Ret(o_user)
 
     def change_password(self, password, old_password):

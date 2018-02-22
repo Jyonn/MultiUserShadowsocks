@@ -25,7 +25,8 @@ class Dealer:
         data_str = json.dumps(data)
         deprint(data_str)
         cls._client.send(data_str.encode())
-        print(cls._client.recv(1506))
+        deprint('end send')
+        # deprint(cls._client.recv(1506))
 
     @classmethod
     def add_port(cls, port, password):
