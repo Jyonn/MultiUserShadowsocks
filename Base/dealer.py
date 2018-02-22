@@ -1,13 +1,17 @@
 import json
 import socket
 
+import os
+
 from Base.common import deprint
 
 
 class Dealer:
     _client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     _client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    _client.bind('/tmp/shadowsocks-client.sock')
+    client_sock_path = '/tmp/shadowsocks-client.sock'
+    os.remove(client_sock_path)
+    _client.bind(client_sock_path)
     _client.connect('/var/run/shadowsocks-manager.sock')
 
     @classmethod
