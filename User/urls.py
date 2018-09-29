@@ -1,12 +1,13 @@
-""" Adel Liu 180222
+""" Adel Liu 180111
 
-用户API子路由
+用户APi子路由
 """
 from django.urls import path
 
-from User.router import rt_user, rt_user_token
+from User.router import rt_user, rt_ss, rt_qt_user_app_id
 
 urlpatterns = [
     path('', rt_user),
-    path('token', rt_user_token),
+    path('ss', rt_ss),
+    # path('@<str:qt_user_app_id>', rt_qt_user_app_id),
 ]

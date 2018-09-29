@@ -26,6 +26,8 @@ class Dealer:
 
     @classmethod
     def add_port(cls, port, password):
+        # deprint('add port debug')
+        # return
         data = {
             'server_port': port,
             'password': password,
@@ -36,6 +38,8 @@ class Dealer:
 
     @classmethod
     def remove_port(cls, port):
+        # deprint('remove port debug')
+        # return
         data = {
             'server_port': port,
         }

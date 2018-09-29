@@ -3,7 +3,6 @@
 用户类
 """
 import random
-import re
 
 from django.db import models
 from django.utils.crypto import get_random_string
@@ -22,31 +21,40 @@ class User(models.Model):
     """
     ROOT_ID = 1
     L = {
-        'username': 32,
-        'password': 32,
+        'qt_user_app_id': 16,
+        'qtb_token': 256,
         'ss_pwd': 32,
+        'nickname': 10,
+        'avatar': 1024,
+        'description': 20,
     }
-    username = models.CharField(
-        max_length=L['username'],
-        unique=True,
-    )
-    password = models.CharField(
-        max_length=L['password'],
-    )
-    pwd_change_time = models.FloatField(
+    SS_CHANGE_INTERVAL = 300
+
+    avatar = models.CharField(
+        default=None,
         null=True,
         blank=True,
-        default=0,
+        max_length=L['avatar'],
     )
-    parent = models.ForeignKey(
-        'User',
-        null=True,
+    nickname = models.CharField(
+        max_length=L['nickname'],
+        default=None,
         blank=True,
-        on_delete=models.SET_NULL,
+        null=True,
     )
-    grant = models.BooleanField(
-        verbose_name='是否有权限新增用户',
-        default=False,
+    qt_user_app_id = models.CharField(
+        default=None,
+        max_length=L['qt_user_app_id'],
+    )
+    qtb_token = models.CharField(
+        default=None,
+        max_length=L['qtb_token'],
+    )
+    description = models.CharField(
+        max_length=L['description'],
+        default=None,
+        blank=True,
+        null=True,
     )
     port = models.PositiveSmallIntegerField(
         verbose_name='SS端口',
@@ -58,7 +66,16 @@ class User(models.Model):
         default=None,
         max_length=L['ss_pwd'],
     )
-    FIELD_LIST = ['username', 'password', 'parent', 'grant', 'port', 'ss_pwd']
+    ss_on = models.BooleanField(
+        verbose_name='ss状态, 0 off, 1 on',
+        default=False,
+    )
+    ss_change_time = models.FloatField(
+        null=True,
+        blank=True,
+        default=0,
+    )
+    FIELD_LIST = ['port', 'ss_pwd', 'avatar', 'nickname', 'qt_user_app_id', 'description']
 
     @classmethod
     def get_unique_port(cls):
@@ -69,97 +86,93 @@ class User(models.Model):
                 return port
             deprint('generate port: %s, conflict.' % port)
 
-    @staticmethod
-    def _valid_username(username):
-        """验证用户名合法"""
-        valid_chars = '^[A-Za-z0-9_]{3,32}$'
-        if re.match(valid_chars, username) is None:
-            return Ret(Error.INVALID_USERNAME)
-        return Ret()
-
-    @staticmethod
-    def _valid_password(password):
-        """验证密码合法"""
-        valid_chars = '^[A-Za-z0-9!@#$%^&*()_+-=,.?;:]{6,16}$'
-        if re.match(valid_chars, password) is None:
-            return Ret(Error.INVALID_PASSWORD)
-        return Ret()
-
-    @staticmethod
-    def _valid_o_parent(o_parent):
-        """验证o_parent合法"""
-        if not isinstance(o_parent, User):
-            return Ret(Error.STRANGE)
-        if not o_parent.grant:
-            return Ret(Error.REQUIRE_GRANT)
-        return Ret()
-
     @classmethod
     def _validate(cls, dict_):
         """验证传入参数是否合法"""
         return field_validator(dict_, cls)
 
-    @classmethod
-    def create(cls, username, password, o_parent):
-        """ 创建用户
-
-        :param username: 用户名
-        :param password: 密码
-        :param o_parent: 父用户
-        :return: Ret对象，错误返回错误代码，成功返回用户对象
-        """
-        ret = cls._validate(locals())
-        if ret.error is not Error.OK:
-            return ret
-
-        hash_password = User._hash(password)
-        ret = User.get_user_by_username(username)
-        if ret.error is Error.OK:
-            return Ret(Error.USERNAME_EXIST)
-        try:
-            o_user = cls(
-                username=username,
-                password=hash_password,
-                parent=o_parent,
-                grant=False,
-                port=cls.get_unique_port(),
-                ss_pwd=get_random_string(length=8)
-            )
-            o_user.save()
-        except ValueError as err:
-            deprint(str(err))
-            return Ret(Error.ERROR_CREATE_USER)
-        Dealer.add_port(o_user.port, o_user.ss_pwd)
-        return Ret(o_user)
-
-    def change_password(self, password, old_password):
-        """修改密码"""
-        ret = self._validate(locals())
-        if ret.error is not Error.OK:
-            return ret
-        if self.password != User._hash(old_password):
-            return Ret(Error.ERROR_PASSWORD)
-        hash_password = User._hash(password)
-        self.password = hash_password
-        import datetime
-        self.pwd_change_time = datetime.datetime.now().timestamp()
-        self.save()
-        return Ret()
-
     @staticmethod
-    def _hash(s):
-        from Base.common import md5
-        return md5(s)
-
-    @staticmethod
-    def get_user_by_username(username):
-        """根据用户名获取用户对象"""
+    def get_user_by_qt_user_app_id(qt_user_app_id):
+        """根据齐天用户-应用ID获取用户对象"""
         try:
-            o_user = User.objects.get(username=username)
+            o_user = User.objects.get(qt_user_app_id=qt_user_app_id)
         except User.DoesNotExist as err:
             deprint(str(err))
             return Ret(Error.NOT_FOUND_USER)
         return Ret(o_user)
+
+    @classmethod
+    def create(cls, qt_user_app_id, token):
+        ret = cls._validate(locals())
+        if ret.error is not Error.OK:
+            return ret
+
+        ret = cls.get_user_by_qt_user_app_id(qt_user_app_id)
+        if ret.error is Error.OK:
+            o_user = ret.body
+            o_user.qtb_token = token
+            o_user.save()
+            return Ret(o_user)
+        try:
+            o_user = cls(
+                qt_user_app_id=qt_user_app_id,
+                qtb_token=token,
+                port=cls.get_unique_port(),
+                ss_pwd=get_random_string(length=8),
+                ss_on=False,
+                ss_change_time=0,
+            )
+            o_user.save()
+        except Exception as err:
+            deprint(str(err))
+            return Ret(Error.ERROR_CREATE_USER)
+
+        o_user.do_ss_on()
+
+        return Ret(o_user)
+
+    def do_ss_on(self):
+        if self.ss_on:
+            return Ret()
+        import datetime
+        crt_time = datetime.datetime.now().timestamp()
+        if crt_time - self.ss_change_time < self.SS_CHANGE_INTERVAL:
+            return Ret(Error.SS_OPERATION_FAST)
+        Dealer.add_port(self.port, self.ss_pwd)
+        self.ss_on = True
+        self.ss_change_time = crt_time
+        self.save()
+        return Ret()
+
+    def do_ss_off(self):
+        if not self.ss_on:
+            return Ret()
+        import datetime
+        crt_time = datetime.datetime.now().timestamp()
+        if crt_time - self.ss_change_time < self.SS_CHANGE_INTERVAL:
+            return Ret(Error.SS_OPERATION_FAST)
+        Dealer.remove_port(self.port)
+        self.ss_on = False
+        self.ss_change_time = crt_time
+        self.save()
+        return Ret()
+
+    def do_ss_reset(self):
+        import datetime
+        crt_time = datetime.datetime.now().timestamp()
+        if crt_time - self.ss_change_time < self.SS_CHANGE_INTERVAL:
+            return Ret(Error.SS_OPERATION_FAST)
+
+        if self.ss_on:
+            Dealer.remove_port(self.port)
+        self.port = self.get_unique_port()
+        self.ss_pwd = get_random_string(length=8)
+        Dealer.add_port(self.port, self.ss_pwd)
+
+        self.ss_on = True
+        self.ss_change_time = crt_time
+        self.save()
+        return Ret()
 
     @classmethod
     def get_user_by_id(cls, user_id):
@@ -184,26 +197,21 @@ class User(models.Model):
     def to_dict(self):
         """把用户对象转换为字典"""
         return dict(
-            username=self.username,
             port=self.port,
             ss_pwd=self.ss_pwd,
+            nickname=self.nickname,
+            avatar=self.avatar,
+            ss_on=self.ss_on,
         )
 
-    @staticmethod
-    def authenticate(username, password):
-        """验证用户名和密码是否匹配"""
-        ret = User._validate(locals())
+    def update(self):
+        from Base.qtb import update_user_info
+        ret = update_user_info(self.qtb_token)
         if ret.error is not Error.OK:
             return ret
-        try:
-            o_user = User.objects.get(username=username)
-        except User.DoesNotExist as err:
-            deprint(str(err))
-            return Ret(Error.NOT_FOUND_USER)
-        if User._hash(password) == o_user.password:
-            return Ret(o_user)
-        return Ret(Error.ERROR_PASSWORD)
-
-    def remove(self):
-        Dealer.remove_port(self.port)
-        self.delete()
+        body = ret.body
+        self.avatar = body['avatar']
+        self.nickname = body['nickname']
+        self.description = body['description']
+        self.save()
+        return Ret()

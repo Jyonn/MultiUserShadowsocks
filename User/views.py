@@ -1,102 +1,75 @@
-from Base.decorator import require_json, require_post, require_delete, require_login
+from Base.decorator import require_get, require_login, require_put
 from Base.error import Error
 from Base.jtoken import jwt_e
-from Base.response import error_response, response
-from Config.models import Config
+from Base.response import error_response, response, Ret
 from User.models import User
-
-ret_ = Config.get_config_by_key('beta-code')
-if ret_.error is not Error.OK:
-    excepted_bc = 'EXCEPTED_BC'
-else:
-    excepted_bc = ret_.body.value
 
 
 def get_token_info(o_user):
     ret = jwt_e(dict(user_id=o_user.pk))
     if ret.error is not Error.OK:
-        return error_response(ret)
+        return ret
     token, dict_ = ret.body
     dict_['token'] = token
     return dict_
 
 
-@require_delete()
+@require_get()
 @require_login
-def delete_user(request, username):
-    """ DELETE /api/user/@:username
+def get_my_info(request):
+    """ GET /api/user/
 
-    删除用户
+    获取我的信息
     """
-    o_parent = request.user
-    if not isinstance(o_parent, User):
-        return error_response(Error.STRANGE)
+    o_user = request.user
+    return get_user_info(request, o_user.qt_user_app_id)
 
-    ret = User.get_user_by_username(username)
+
+@require_get()
+def get_user_info(request, qt_user_app_id):
+    """ GET /api/user/@:qt_user_app_id
+
+    获取用户信息
+    """
+    ret = User.get_user_by_qt_user_app_id(qt_user_app_id)
     if ret.error is not Error.OK:
         return error_response(ret)
     o_user = ret.body
     if not isinstance(o_user, User):
         return error_response(Error.STRANGE)
-    if o_user.parent != o_parent or o_parent.pk == User.ROOT_ID:
-        return error_response(Error.NO_DELETE_RIGHT)
-    o_user.remove()
-    return response()
+    o_user.update()
+    return response(body=o_user.to_dict())
 
 
-@require_json
-@require_post(['username', 'password', 'beta_code'])
-# @require_login
-def create_user(request):
-    """ POST /api/user/
+def validate_action(action):
+    if action not in ['on', 'off', 'reset']:
+        return Ret(Error.ERROR_PARAM_FORMAT, append_msg='，action取值错误')
+    return Ret()
 
-    创建用户
+
+@require_put([('action', validate_action)])
+@require_login
+def change_ss(request):
+    """ PUT /api/user/ss
+    
+    修改VPN信息
     """
-    username = request.d.username
-    password = request.d.password
-    beta_code = request.d.beta_code
 
-    if beta_code != excepted_bc:
-        return error_response(Error.BETA_CODE_ERROR)
+    action = request.d.action
 
-    # o_parent = request.user
-    # if not isinstance(o_parent, User):
-    #     return error_response(Error.STRANGE)
-    ret = User.get_user_by_id(User.ROOT_ID)
-    if ret.error is not Error.OK:
-        return error_response(ret)
-    o_parent = ret.body
-    if not isinstance(o_parent, User):
-        return error_response(Error.STRANGE)
-
-    ret = User.create(username, password, o_parent)
-    if ret.error is not Error.OK:
-        return error_response(ret)
-    o_user = ret.body
+    o_user = request.user
     if not isinstance(o_user, User):
         return error_response(Error.STRANGE)
 
+    print(action)
+    if action == 'on':
+        ret = o_user.do_ss_on()
+    elif action == 'off':
+        ret = o_user.do_ss_off()
+    else:
+        ret = o_user.do_ss_reset()
+
     if ret.error is not Error.OK:
         return error_response(ret)
 
-    return response(body=get_token_info(o_user))
-
-
-@require_json
-@require_post(['username', 'password'])
-def auth_token(request):
-    """ GET /api/user/token
-
-    登录获取token
-    """
-    username = request.d.username
-    password = request.d.password
-
-    ret = User.authenticate(username, password)
-    if ret.error != Error.OK:
-        return error_response(ret)
-    o_user = ret.body
-    if not isinstance(o_user, User):
-        return error_response(Error.STRANGE)
-
-    return response(body=get_token_info(o_user))
+    return response(body=o_user.to_dict())

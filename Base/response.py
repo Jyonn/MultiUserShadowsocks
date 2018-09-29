@@ -9,6 +9,7 @@ from django.http import HttpResponse
 
 from Base.common import deprint
 from Base.error import Error, E
+from MultiUserShadowsocks.settings import DEBUG
 
 
 class Method:
@@ -32,12 +33,13 @@ class Ret:
         self.append_msg = append_msg
 
 
-def response(eid=Error.OK, msg="ok", body=None, allow=False):
+def response(e=Error.OK, msg=Error.OK.msg, body=None, allow=False):
     """
     回复HTTP请求
     """
     resp = {
-        "code": eid.eid,
+        "status": 'debug' if DEBUG else 'release',
+        "code": e.eid,
         "msg": msg,
         "body": body or [],
     }
@@ -55,18 +57,18 @@ def response(eid=Error.OK, msg="ok", body=None, allow=False):
     return http_resp
 
 
-def error_response(error_id, append_msg=""):
+def error_response(e, append_msg=""):
     """
     回复一个错误
     171216 当error_id为Ret类时，自动转换
     """
-    if isinstance(error_id, Ret):
-        append_msg = error_id.append_msg
-        error_id = error_id.error
-    if not isinstance(error_id, E):
-        deprint(error_id)
+    if isinstance(e, Ret):
+        append_msg = e.append_msg
+        e = e.error
+    if not isinstance(e, E):
+        deprint(str(e))
         return error_response(Error.STRANGE, append_msg='error_response error_id not E')
-    for error in Error.ERROR_DICT:
-        if error_id == error[0]:
-            return response(eid=error_id, msg=error[1] + append_msg)
-    return error_response(Error.ERROR_NOT_FOUND, append_msg=str(error_id))
+
+    if not DEBUG and e.release:
+        e = e.release
+    return response(e=e, msg=e.msg + append_msg)
