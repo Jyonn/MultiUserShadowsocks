@@ -19,7 +19,7 @@ def rt_user(request):
     """
     options = {
         Method.GET: "获取我的信息",
-        Method.POST: "创建用户",
+        # Method.POST: "创建用户",
         # Method.PUT: "修改用户信息",
     }
     if request.method == Method.OPTIONS:
