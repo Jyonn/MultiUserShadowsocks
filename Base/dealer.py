@@ -3,6 +3,13 @@ import socket
 
 import os
 
+from SmartDjango import E
+
+
+@E.register(id_processor=E.idp_cls_prefix())
+class DealerError:
+    CONNECT_MANAGER = E('链接错误')
+
 
 class Dealer:
     _client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -15,8 +22,8 @@ class Dealer:
     _client.bind(client_sock_path)
     try:
         _client.connect('/var/run/shadowsocks-manager.sock')
-    except FileNotFoundError as err:
-        pass
+    except Exception as err:
+        raise DealerError.CONNECT_MANAGER(debug_message=err)
 
     @classmethod
     def _send(cls, data):
