@@ -1,31 +1,24 @@
-from Base.decorator import require_get
-from Base.error import Error
-from Base.qtb import get_qtb_user_token
-from Base.response import error_response, response
+from SmartDjango import Analyse
+from django.views import View
+from smartify import P
+
+from Base.auth import Auth
+from Base.common import qt_manager
 from User.models import User
-from User.views import get_token_info
 
 
-@require_get(['code'])
-def oauth_qtb_callback(request):
-    code = request.d.code
+class OAuthView(View):
+    @staticmethod
+    @Analyse.r(q=[P('code', '齐天簿授权码')])
+    def get(r):
+        code = r.d.code
 
-    ret = get_qtb_user_token(code)
-    if ret.error is not Error.OK:
-        return error_response(ret)
-    body = ret.body
-    token = body['token']
-    qt_user_app_id = body['user_app_id']
+        body = qt_manager.get_token(code)
 
-    ret = User.create(qt_user_app_id, token)
-    if ret.error is not Error.OK:
-        return error_response(ret)
-    o_user = ret.body
-    if not isinstance(o_user, User):
-        return error_response(Error.STRANGE)
+        token = body['token']
+        qt_user_app_id = body['user_app_id']
 
-    ret = o_user.update()
-    if ret.error is not Error.OK:
-        return error_response(ret)
+        user = User.create(qt_user_app_id, token)
 
-    return response(body=get_token_info(o_user))
+        user.update()
+        return Auth.get_login_token(user)

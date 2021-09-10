@@ -1,19 +1,20 @@
-""" 171203 Adel Liu """
+""" 190815 Adel Liu """
+
+from QitianSDK import QitianManager
+
+from Config.models import Config, CI
+
 
 DEBUG = True
 
 
-def deprint(*args):
-    """
-    系统处于调试状态时输出数据
-    """
-    if DEBUG:
-        print(*args)
+QITIAN_APP_ID = Config.get_value_by_key(CI.QITIAN_APP_ID)
+QITIAN_APP_SECRET = Config.get_value_by_key(CI.QITIAN_APP_SECRET)
 
+SECRET_KEY = Config.get_value_by_key(CI.PROJECT_SECRET_KEY)
+JWT_ENCODE_ALGO = Config.get_value_by_key(CI.JWT_ENCODE_ALGO)
 
-def md5(s):
-    """获取字符串的MD5"""
-    import hashlib
-    md5_ = hashlib.md5()
-    md5_.update(s.encode())
-    return md5_.hexdigest()
+HOST = Config.get_value_by_key(CI.HOST)
+ADMIN_QITIAN = Config.get_value_by_key(CI.ADMIN_QITIAN)
+
+qt_manager = QitianManager(QITIAN_APP_ID, QITIAN_APP_SECRET, timeout=5)

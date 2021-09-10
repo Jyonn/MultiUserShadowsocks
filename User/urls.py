@@ -4,10 +4,9 @@
 """
 from django.urls import path
 
-from User.router import rt_user, rt_ss, rt_qt_user_app_id
+from User import views
 
 urlpatterns = [
-    path('', rt_user),
-    path('ss', rt_ss),
-    # path('@<str:qt_user_app_id>', rt_qt_user_app_id),
+    path('', views.UserV.as_view()),
+    path('ss', views.SSV.as_view()),
 ]

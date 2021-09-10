@@ -3,8 +3,6 @@ import socket
 
 import os
 
-from Base.common import deprint
-
 
 class Dealer:
     _client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -26,23 +24,17 @@ class Dealer:
 
     @classmethod
     def add_port(cls, port, password):
-        # deprint('add port debug')
-        # return
         data = {
             'server_port': port,
             'password': password,
         }
         data_str = json.dumps(data)
-        deprint(data_str)
         cls._send('add: %s' % data_str)
 
     @classmethod
     def remove_port(cls, port):
-        # deprint('remove port debug')
-        # return
         data = {
             'server_port': port,
         }
         data_str = json.dumps(data)
-        deprint(data_str)
         cls._send('remove: %s' % data_str)
