@@ -187,10 +187,10 @@ class User(models.Model):
         self.save()
 
 
-class UserP:
-    @staticmethod
-    def action_validator(action):
-        if action not in ['on', 'off', 'reset']:
-            raise UserError.ACTION
+def action_validator(action):
+    if action not in ['on', 'off', 'reset']:
+        raise UserError.ACTION
 
+
+class UserP:
     action = P('action').validate(action_validator)
