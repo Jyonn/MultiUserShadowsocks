@@ -62,11 +62,8 @@ class ConfigInstance:
     JWT_ENCODE_ALGO = 'jwt-encode-algo'
     PROJECT_SECRET_KEY = 'project-secret-key'
 
-    HOST = 'host'
-
     QITIAN_APP_ID = 'qt-app-id'
     QITIAN_APP_SECRET = 'qt-app-secret'
-    ADMIN_QITIAN = 'admin-qitian'
 
 
 CI = ConfigInstance
