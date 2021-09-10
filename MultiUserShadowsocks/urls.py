@@ -15,6 +15,9 @@ Including another URLconf
 """
 from django.urls import path, include
 
+from django.urls import path, include
+
 urlpatterns = [
-    path('api/', include('MultiUserShadowsocks.api_urls')),
+    path('user/', include('User.urls')),
+    path('oauth/', include('OAuth.urls')),
 ]
