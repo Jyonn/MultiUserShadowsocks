@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/2.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
+import pymysql
+pymysql.install_as_MySQLdb()
 
 import os
 
@@ -24,7 +26,9 @@ SECRET_KEY = 'YOUR_SECRET_KEY'
 JWT_ENCODE_ALGO = 'HS256'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+PROJ_INIT = True
 DEBUG = True
+APPEND_SLASH = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -38,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'User',
     'Config',
 ]
